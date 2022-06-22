@@ -1,7 +1,10 @@
 const fs = require('node:fs');
 const path = require('node:path');
 const { Client, Collection, Intents } = require('discord.js');
-const { BOT_TOKEN } = require('./config.json');
+const {BOT_TOKEN } = require('./config.json');
+const {
+    initSheet, findAllPlayers, mapPlayerToID, mapIDToPlayer, getStatsOfPlayerById, getStatsOfPlayerByName
+} = require('./utils/sheet_funcs');
 
 const client = new Client({ intents: [Intents.FLAGS.GUILDS] });
 
@@ -15,7 +18,8 @@ for (const file of commandFiles) {
 	client.commands.set(command.data.name, command);
 }
 
-client.once('ready', () => {
+client.once('ready', async () => {
+	await initSheet();
 	client.user.setPresence({ activities: [{ name: 'Damos run it down', type: 3 }]});
 	console.log("Successfully logged in as " + client.user.username + ".");
 });
