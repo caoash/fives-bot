@@ -24,7 +24,7 @@ const initSheet = async () => {
     logSheet = doc.sheetsByIndex[3]; // sheet logging win/lose of players
 
     // load all useful cells (+1 because it starts at 2)
-    await mainSheet.loadCells('F2:F' + (MAX_PLAYERS + 1).toString()); // player list
+    await mainSheet.loadCells('A2:F' + (MAX_PLAYERS + 1).toString()); // player list
 
     await mapSheet.loadCells('B1:C' + MAX_PLAYERS.toString()); // name : discord id
 
@@ -295,12 +295,93 @@ const addNewPlayer = async (name, id) => {
     }
 
     await eloSheet.saveUpdatedCells();
-
     return;
 }
 
+/*
+    signs up an existing player for given roles
+    @param {String} name    name of player
+    @param {String} role1   main role of player
+    @param {String} role2   (optional) secondary role of player
+*/
+
+const signupPlayer = async (name, role1, role2) => {
+    const roleList = ['TOP', 'JUNGLE', 'MID', 'ADC', 'SUPPORT'];
+    
+    const addRole = (name, role, isMain) => {
+        if (!roleList.includes(role)) { 
+            throw new Error("A nonexisting role was selected.");
+        }
+        let ind = -1;
+        for (let i = 0; i < 5; ++i) {
+            if (roleList[i] === role) {
+                ind = i;
+            }
+        }
+        let found = false;
+        for (let i = 1; i <= MAX_PLAYERS; ++i) {
+            let roleCell = mainSheet.getCell(i, ind);
+            if (roleCell.value === null) {
+                roleCell.value = name;
+                if (isMain) roleCell.textFormat = { bold: true };
+                found = true;
+                break;
+            }
+        }
+        if (!found) throw new Error("No open spots found to add player to role list. Try increasing MAX_PLAYERS.");
+    }   
+
+    if (role1 === null) {
+        throw new Error("No roles were selected.");
+    } 
+    addRole(name, role1, true);
+    if (role2 !== null) addRole(name, role2, false);
+
+    await mainSheet.saveUpdatedCells();
+}
+
+/*
+    removes an existing player from participating in fives
+    @param {String} name    name of player
+*/
+
+
+const unsignupPlayer = async (name) => {
+    let found = false;
+    for (let i = 1; i <= MAX_PLAYERS; ++i) {
+        for (let j = 0; j < 5; j++) {
+            let curCell = mainSheet.getCell(i, j);
+            if (curCell.value === name) {
+                curCell.value = null;
+                found = true;
+            }
+        }
+    }
+    if (found) await mainSheet.saveUpdatedCells();
+    return found;
+}
+
+/*
+    checks if a player is registered for fives
+    @param {String} name    name of player
+    @return {boolean}       whether the player is registered
+*/
+
+const checkRegistration = (name) => {
+    let found = false;
+    for (let i = 1; i <= MAX_PLAYERS; ++i) {
+        for (let j = 0; j < 5; j++) {
+            let curCell = mainSheet.getCell(i, j);
+            if (curCell.value === name) {
+                found = true;
+            }
+        }
+    }
+    return found;
+}
+
 module.exports = {
-    initSheet, findAllPlayers, mapPlayerToID, mapIDToPlayer, getStatsOfPlayerById, getStatsOfPlayerByName, addNewPlayer
+    initSheet, findAllPlayers, mapPlayerToID, mapIDToPlayer, getStatsOfPlayerById, getStatsOfPlayerByName, addNewPlayer, signupPlayer, unsignupPlayer, checkRegistration
 };
 
 

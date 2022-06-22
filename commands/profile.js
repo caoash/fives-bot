@@ -2,7 +2,7 @@ const { SlashCommandBuilder } = require('@discordjs/builders');
 const { MessageEmbed } = require('discord.js');
 
 const {
-    mapPlayerToID, mapIDToPlayer, getStatsOfPlayerById
+    getStatsOfPlayerById
 } = require('../utils/sheet_funcs');
 
 module.exports = {
