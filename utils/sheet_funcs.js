@@ -39,7 +39,7 @@ const initSheet = async () => {
     @return {List}          player list
 */
 
-const findAllPlayers = (mainSheet) => {
+const findAllPlayers = () => {
     let playerArr = [];
     for (let i = 2; i <= MAX_PLAYERS; ++i) {
         let playerData = mainSheet.getCellByA1('F' + i.toString()).value;
