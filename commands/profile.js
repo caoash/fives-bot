@@ -25,14 +25,14 @@ module.exports = {
 
         for (let i = 0; i < 4; ++i) {
             if (statsList[i] === null) {
-                await interaction.reply("User does not have a profile. Use /register to create one!");
+                await interaction.reply("User does not have a profile. Use `/register` to create one.");
                 return;
             }
         }
 
         const statsEmbed = new MessageEmbed()
             .setColor('#0x6fffff')
-            .setTitle('📈  Profile for ' + chosenUser.username)
+            .setTitle('Profile for ' + chosenUser.username)
             .setDescription("All information is taken from the fives Google Sheet.")
             .setThumbnail(chosenUser.avatarURL())
             .addFields(

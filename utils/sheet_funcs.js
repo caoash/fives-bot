@@ -1,5 +1,5 @@
 const { GoogleSpreadsheet } = require('google-spreadsheet');
-const { CLIENT_EMAIL, PRIVATE_KEY, SHEET_ID, MAX_PLAYERS, MAX_GAMES, ALPHABET } = require('./config.json');
+const { CLIENT_EMAIL, PRIVATE_KEY, SHEET_ID, MAX_PLAYERS, MAX_GAMES, ALPHABET, ROLE_LIST, EMOTE_LIST } = require('./config.json');
 
 const doc = new GoogleSpreadsheet(SHEET_ID);
 
@@ -106,6 +106,9 @@ const getStatsOfPlayerById = (id) => {
 
     for (let i = 2; i <= MAX_PLAYERS; ++i) {
         let playerName = eloSheet.getCellByA1('I' + i.toString()).value;
+        if (playerName === null) {
+            break;
+        }
         if (mapPlayerToID(playerName).toString() === id.toString()) {
             for (let j = 0; j < 4; ++j) {
                 let stat = eloSheet.getCell(i - 1, statsArr[j]).value;
@@ -306,15 +309,13 @@ const addNewPlayer = async (name, id) => {
 */
 
 const signupPlayer = async (name, role1, role2) => {
-    const roleList = ['TOP', 'JUNGLE', 'MID', 'ADC', 'SUPPORT'];
-    
     const addRole = (name, role, isMain) => {
-        if (!roleList.includes(role)) { 
+        if (!ROLE_LIST.includes(role)) { 
             throw new Error("A nonexisting role was selected.");
         }
         let ind = -1;
         for (let i = 0; i < 5; ++i) {
-            if (roleList[i] === role) {
+            if (ROLE_LIST[i] === role) {
                 ind = i;
             }
         }
@@ -324,6 +325,7 @@ const signupPlayer = async (name, role1, role2) => {
             if (roleCell.value === null) {
                 roleCell.value = name;
                 if (isMain) roleCell.textFormat = { bold: true };
+                else if (!isMain) roleCell.textFormat = { bold: false };
                 found = true;
                 break;
             }
@@ -380,16 +382,53 @@ const checkRegistration = (name) => {
     return found;
 }
 
+/*
+    gets a list of registered players and their roles
+    @TODO assert that each player does not have two primary roles, secondary, >2 roles, etc.
+
+    @return {Map}          map of objects {player, [ROLES]}
+*/
+
+const getPlayerList = () => {
+    let resList = new Map();
+    for (let i = 1; i <= MAX_PLAYERS; ++i) {
+        for (let j = 0; j < 5; j++) {
+            let curCell = mainSheet.getCell(i, j);
+
+            let curName = curCell.value;
+            let curFormat = curCell.textFormat;
+            
+            let isPrimary = (curFormat !== undefined);
+
+            // have to do this because it still checks curFormat even if undefined (MAYBE?)
+            if (isPrimary) isPrimary &= ('bold' in curFormat && curFormat['bold']);
+            
+            if (curName !== null) {
+                if (!resList.has(curName)) {
+                    if (isPrimary) resList.set(curName, [EMOTE_LIST[j], null]);
+                    else resList.set(curName, [null, EMOTE_LIST[j]]);
+                } else {
+                    let curArr = resList.get(curName).slice();
+                    if (isPrimary) curArr[0] = EMOTE_LIST[j];
+                    else curArr[1] = EMOTE_LIST[j];
+                    resList.set(curName, curArr);
+                }
+            }
+        }
+    }
+    return resList;
+}
+
 module.exports = {
-    initSheet, findAllPlayers, mapPlayerToID, mapIDToPlayer, getStatsOfPlayerById, getStatsOfPlayerByName, addNewPlayer, signupPlayer, unsignupPlayer, checkRegistration
+    initSheet, findAllPlayers, mapPlayerToID, mapIDToPlayer, getStatsOfPlayerById, getStatsOfPlayerByName, addNewPlayer, signupPlayer, unsignupPlayer, checkRegistration, getPlayerList
 };
 
 
-// const debugCode = async () => {
-//     await addNewPlayer("A", "BB");
-// }
+const debugCode = async () => {
+    await getPlayerList();
+}
 
-// initSheet().then(debugCode);
+initSheet().then(debugCode);
 
 
 

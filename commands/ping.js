@@ -9,7 +9,7 @@ module.exports = {
         const delay = Math.abs(Date.now() - interaction.createdTimestamp);
         const pingEmbed = new MessageEmbed()
             .setColor('#0x6fffff')
-            .setTitle('🕒 Eep!')
+            .setTitle('Eep!')
             .setDescription(
                 'Response Time: ' + delay + 'ms'
             );

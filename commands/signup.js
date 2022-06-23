@@ -42,14 +42,14 @@ module.exports = {
         } else {
             let user = mapIDToPlayer(interaction.user.id);
             if (user === null) {
-                interaction.reply("You have not registered as a user yet. Use /register to do so.");
+                interaction.reply("You have not registered as a user yet. Use `/register` to do so.");
             } else {
                 let registered = checkRegistration(user);
                 if (registered) {
-                    interaction.reply("You've already signed up for fives. If you want to change your roles, do /exit and then sign up again.");
+                    interaction.reply("You've already signed up for fives. If you want to change your roles, do `/exit` and then sign up again.");
                 } else {
                     await signupPlayer(user, firstRole, secondRole);
-                    interaction.reply("Successfully signed up " + user + " for fives. Use /exit to remove yourself.");
+                    interaction.reply("Successfully signed up " + user + " for fives. Use `/exit` to remove yourself.");
                 }
             }
         }
