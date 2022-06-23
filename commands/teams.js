@@ -22,7 +22,7 @@ module.exports = {
         }
 
         let curTeams = getTeams();
-        console.log(curTeams);
+        // console.log(curTeams);
 
         for (let i = 0; i < TEAM_SIZE; i++) {
             let firstID = mapPlayerToID(curTeams[i][0]);

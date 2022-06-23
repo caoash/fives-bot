@@ -15,11 +15,11 @@ module.exports = {
         await initSheet();
         const delay = Math.abs(Date.now() - interaction.createdTimestamp);
         const refreshEmbed = new MessageEmbed()
-        .setColor(EMBED_COLOR)
-        .setTitle('Eep!')
-        .setDescription(
-            'Refreshed in: ' + delay + 'ms'
-        );
-        await interaction.reply({embeds : [ refreshEmbed ]});
+            .setColor(EMBED_COLOR)
+            .setTitle('Eep!')
+            .setDescription(
+                'Refreshed in: ' + delay + 'ms'
+            );
+        await interaction.reply( {embeds : [ refreshEmbed ]} );
 	},
 };

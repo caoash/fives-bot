@@ -43,22 +43,16 @@ module.exports = {
             interaction.reply("It's impossible to make teams. Please do `/exit` and re-signup with a more diverse roles.");
             return;
         }
-        console.log(curTeams);
+        // console.log(curTeams);
 
         for (let i = 0; i < TEAM_SIZE; i++) {
             let firstID = mapPlayerToID(curTeams[i][0]);
-            teamsEmbed.addField(
-                curTeams[i][0] + " " + EMOTE_LIST[i], "<@" + firstID + ">", true,
-            )
-        }
-
-        teamsEmbed.addField("\u200b", "\u200b", false);
-        
-        for (let i = 0; i < TEAM_SIZE; i++) {
             let secID = mapPlayerToID(curTeams[i][1]);
-            teamsEmbed.addField(
-                curTeams[i][1] + " " + EMOTE_LIST[i], "<@" + secID + ">", true,
+            teamsEmbed.addFields(
+                { name: curTeams[i][0] + " " + EMOTE_LIST[i], value: "<@" + firstID + ">", inline: true },
+                { name: curTeams[i][1] + " " + EMOTE_LIST[i], value:  "<@" + secID + ">", inline: true },
             )
+            if (i != TEAM_SIZE - 1) teamsEmbed.addField("\u200b", "\u200b", false);
         }
 
         await updateTeams(curTeams);

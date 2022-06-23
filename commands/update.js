@@ -18,6 +18,7 @@ module.exports = {
                 .addChoices(
                     { name: 'Team One', value: 'ONE' },
                     { name: 'Team Two', value: 'TWO' },
+                    { name: 'Cancelled', value: 'NULL' },
                 )
         ),
 	async execute(interaction) {
@@ -29,9 +30,17 @@ module.exports = {
             interaction.reply("There is no ongoing game.");
             return;
         }
-        let winner = interaction.options.getString('winningTeam');
+        let winner = interaction.options.getString('winner');
+        
+        if (winner === 'NULL') {
+            await clearSheet();
+            interaction.reply("Cancelled the game.");
+            return;
+        }
+        
         await updateWinner(winner);
         await clearSheet();
-        interaction.reply("Updated sheet.");
+        
+        interaction.reply("Updated sheet with winner team " + (winner === 'ONE' ? 'one.' : 'two.'));
 	},
 };

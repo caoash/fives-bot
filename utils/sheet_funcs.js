@@ -255,7 +255,7 @@ const addNewPlayer = async (name, id) => {
     */
     let foundRow = -1;
     for (let i = 1; i <= MAX_PLAYERS; ++i) {
-        console.log('I' + (i + 1).toString());
+        // console.log('I' + (i + 1).toString());
         let playerCell = eloSheet.getCellByA1('I' + (i + 1).toString()); // increase from 0-index to 1-index (A1 notation)
         if (playerCell.value === null) {
             foundRow = i;
@@ -472,12 +472,12 @@ const gameOngoing = () => {
     for (let i = 0; i < TEAM_SIZE; ++i) {
         let firstTeamCell = mainSheet.getCellByA1('G' + (i + 2).toString());
         let secondTeamCell = mainSheet.getCellByA1('H' + (i + 2).toString());
-        console.log(firstTeamCell.value + " " + secondTeamCell.value);
+        // console.log(firstTeamCell.value + " " + secondTeamCell.value);
         if (firstTeamCell.value !== null || secondTeamCell.value !== null) {
             ++countPlayers;
         }
     }
-    console.log(countPlayers);
+    // console.log(countPlayers);
     if (countPlayers === TEAM_SIZE) return true;
     else if (countPlayers === 0) return false;
     else throw new Error("There were between 1 and 9 players active. Likely needs a manual fix.");
@@ -537,8 +537,21 @@ const clearSheet = async () => {
     await mainSheet.saveUpdatedCells();
 }
 
+/*
+    clears the mainSheet of players
+*/
+
+const clearPlayers = async () => {
+    for (let i = 1; i <= MAX_PLAYERS; ++i) {
+        for (let j = 0; j < 5; j++) {
+            let curCell = mainSheet.getCell(i, j);
+            curCell.value = null;
+        }
+    }
+}
+
 module.exports = {
-    initSheet, findAllPlayers, mapPlayerToID, mapIDToPlayer, getStatsOfPlayerById, getStatsOfPlayerByName, addNewPlayer, signupPlayer, unsignupPlayer, checkRegistration, getPlayerList, updateTeams, gameOngoing, updateWinner, clearSheet, getTeams
+    initSheet, findAllPlayers, mapPlayerToID, mapIDToPlayer, getStatsOfPlayerById, getStatsOfPlayerByName, addNewPlayer, signupPlayer, unsignupPlayer, checkRegistration, getPlayerList, updateTeams, gameOngoing, updateWinner, clearSheet, getTeams, clearPlayers
 };
 
 
