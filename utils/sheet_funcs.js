@@ -1,5 +1,5 @@
 const { GoogleSpreadsheet } = require('google-spreadsheet');
-const { CLIENT_EMAIL, PRIVATE_KEY, SHEET_ID, MAX_PLAYERS, MAX_GAMES, ALPHABET, ROLE_LIST, EMOTE_LIST } = require('./config.json');
+const { CLIENT_EMAIL, PRIVATE_KEY, SHEET_ID, MAX_PLAYERS, MAX_GAMES, ALPHABET, ROLE_LIST, TEAM_SIZE } = require('./config.json');
 
 const doc = new GoogleSpreadsheet(SHEET_ID);
 
@@ -24,7 +24,7 @@ const initSheet = async () => {
     logSheet = doc.sheetsByIndex[3]; // sheet logging win/lose of players
 
     // load all useful cells (+1 because it starts at 2)
-    await mainSheet.loadCells('A2:F' + (MAX_PLAYERS + 1).toString()); // player list
+    await mainSheet.loadCells('A2:H' + (MAX_PLAYERS + 1).toString()); // player list
 
     await mapSheet.loadCells('B1:C' + MAX_PLAYERS.toString()); // name : discord id
 
@@ -405,12 +405,12 @@ const getPlayerList = () => {
             
             if (curName !== null) {
                 if (!resList.has(curName)) {
-                    if (isPrimary) resList.set(curName, [EMOTE_LIST[j], null]);
-                    else resList.set(curName, [null, EMOTE_LIST[j]]);
+                    if (isPrimary) resList.set(curName, [j, null]);
+                    else resList.set(curName, [null, j]);
                 } else {
                     let curArr = resList.get(curName).slice();
-                    if (isPrimary) curArr[0] = EMOTE_LIST[j];
-                    else curArr[1] = EMOTE_LIST[j];
+                    if (isPrimary) curArr[0] = j;
+                    else curArr[1] = j;
                     resList.set(curName, curArr);
                 }
             }
@@ -419,8 +419,126 @@ const getPlayerList = () => {
     return resList;
 }
 
+/*
+    updates the teams on the spreadsheet
+
+    @param {Array} teamList         list of both teams sorted by role
+*/
+
+
+const updateTeams = async (teamList) => {
+    for (let i = 0; i < TEAM_SIZE; i++) {
+        let firstTeamCell = mainSheet.getCellByA1('G' + (i + 2).toString());
+        let secondTeamCell = mainSheet.getCellByA1('H' + (i + 2).toString());
+
+        if (firstTeamCell === null || secondTeamCell === null) {
+            throw new Error("Teams weren't empty before starting this operation. Did you forget to run `/update {winningTeam}` after the previous game ended?");
+        }
+
+        firstTeamCell.value = teamList[i][0];
+        secondTeamCell.value = teamList[i][1];
+    }
+    await mainSheet.saveUpdatedCells();
+}
+
+/*
+    gets a list of both teams
+
+    @return {Array}                 list of both teams sorted by role
+*/
+
+const getTeams = () => {
+    let teams = [];
+    for (let i = 0; i < TEAM_SIZE; ++i) {
+        let firstTeamCell = mainSheet.getCellByA1('G' + (i + 2).toString());
+        let secondTeamCell = mainSheet.getCellByA1('H' + (i + 2).toString());
+        if (firstTeamCell === null || secondTeamCell === null) {
+            throw new Error("Empty cell found when getting teams. Likely means there is no ongoing game or TEAM_SIZE is set incorrectly.");
+        }
+        teams.push([firstTeamCell.value, secondTeamCell.value]);
+    }
+    return teams;
+}
+
+/*
+    checks whether there is an ongoing game
+
+    @return {boolean}                    if there is an ongoing game
+*/
+
+
+const gameOngoing = () => {
+    let countPlayers = 0;
+    for (let i = 0; i < TEAM_SIZE; ++i) {
+        let firstTeamCell = mainSheet.getCellByA1('G' + (i + 2).toString());
+        let secondTeamCell = mainSheet.getCellByA1('H' + (i + 2).toString());
+        console.log(firstTeamCell.value + " " + secondTeamCell.value);
+        if (firstTeamCell.value !== null || secondTeamCell.value !== null) {
+            ++countPlayers;
+        }
+    }
+    console.log(countPlayers);
+    if (countPlayers === TEAM_SIZE) return true;
+    else if (countPlayers === 0) return false;
+    else throw new Error("There were between 1 and 9 players active. Likely needs a manual fix.");
+}
+
+/*
+    updates the logs after the game
+
+    @param {String} winningTeam         the team that won     
+*/
+
+const updateWinner = async (winningTeam) => {
+    let winner = (winningTeam === 'ONE' ? 0 : 1);
+
+    let winners = [];
+    let losers = [];
+
+    for (let i = 1; i < 2 + TEAM_SIZE; ++i) {
+        let winCheck = mainSheet.getCell(i, 6 + winner);
+        let loseCheck = mainSheet.getCell(i, 6 + (winner ^ 1));
+        winners.push(winCheck.value);
+        losers.push(loseCheck.value);
+    }
+
+    for (let i = 0; i < MAX_PLAYERS; ++i) {
+        let nameCell = logSheet.getCell(0, i);
+        if (nameCell.value === null) continue;
+        for (let j = 1; j <= MAX_GAMES; ++j) {
+            let gameCell = logSheet.getCell(j, i);
+            if (gameCell.value === null) {
+                if (winners.includes(nameCell.value)) gameCell.value = 'WIN';
+                else if (losers.includes(nameCell.value)) gameCell.value = 'LOSE';
+                else gameCell.value = 'N/A';
+                gameCell.horizontalAlignment = "CENTER";
+                break;
+            }
+        }
+    }
+
+    await logSheet.saveUpdatedCells();
+}
+
+
+/*
+    clears the mainSheet after games 
+*/
+
+const clearSheet = async () => {
+
+    for (let i = 1; i < 2 + TEAM_SIZE; ++i) {
+        let winCheck = mainSheet.getCell(i, 6);
+        let loseCheck = mainSheet.getCell(i, 7);
+        winCheck.value = null;
+        loseCheck.value = null;
+    }
+
+    await mainSheet.saveUpdatedCells();
+}
+
 module.exports = {
-    initSheet, findAllPlayers, mapPlayerToID, mapIDToPlayer, getStatsOfPlayerById, getStatsOfPlayerByName, addNewPlayer, signupPlayer, unsignupPlayer, checkRegistration, getPlayerList
+    initSheet, findAllPlayers, mapPlayerToID, mapIDToPlayer, getStatsOfPlayerById, getStatsOfPlayerByName, addNewPlayer, signupPlayer, unsignupPlayer, checkRegistration, getPlayerList, updateTeams, gameOngoing, updateWinner, clearSheet, getTeams
 };
 
 

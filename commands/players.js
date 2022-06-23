@@ -1,5 +1,6 @@
 const { SlashCommandBuilder } = require('@discordjs/builders');
 const { MessageEmbed } = require('discord.js');
+const { EMOTE_LIST, EMBED_COLOR } = require('../utils/config');
 
 const {
     getPlayerList
@@ -12,7 +13,7 @@ module.exports = {
 	async execute(interaction) {
         let playerList = getPlayerList();
         const playersEmbed = new MessageEmbed()
-            .setColor('#0x6fffff')
+            .setColor(EMBED_COLOR)
             .setTitle('Fives Queuers')
             .setDescription(
                 'To sign up, type `/signup.` To remove yourself, type `/exit`.'
@@ -24,8 +25,8 @@ module.exports = {
             if (value[0] === null) {
                 throw new Error("Primary role is NULL.");
             }
-            roleString += (" " + value[0]);
-            if (value[1] !== null) roleString += (" " + value[1]);
+            roleString += (" " + EMOTE_LIST[value[0]]);
+            if (value[1] !== null) roleString += (" " + EMOTE_LIST[value[1]]);
             if (playerCount > 10) roleString += ' (SUB) ';
             playersEmbed.addField(roleString, "\u200b", false);
         })

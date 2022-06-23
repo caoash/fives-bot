@@ -1,6 +1,8 @@
 const { SlashCommandBuilder } = require('@discordjs/builders');
 const { MessageEmbed } = require('discord.js');
 
+const { EMBED_COLOR } = require('../utils/config.json');
+
 const {
     getStatsOfPlayerById
 } = require('../utils/sheet_funcs');
@@ -31,7 +33,7 @@ module.exports = {
         }
 
         const statsEmbed = new MessageEmbed()
-            .setColor('#0x6fffff')
+            .setColor(EMBED_COLOR)
             .setTitle('Profile for ' + chosenUser.username)
             .setDescription("All information is taken from the fives Google Sheet.")
             .setThumbnail(chosenUser.avatarURL())
