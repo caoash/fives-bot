@@ -17,7 +17,7 @@ const makeTeams = (players, setting) => {
     
     let goodSols = [];
 
-    if (playerList.size != 2 * TEAM_SIZE) {
+    if (players.size != 2 * TEAM_SIZE) {
         throw new Error("There are not ten players.");
     }
 
@@ -25,7 +25,7 @@ const makeTeams = (players, setting) => {
         let cnt = 0;
         let roleCnt = [];
         for (let j = 0; j < TEAM_SIZE; j++) roleCnt.push(0);
-        playerList.forEach((value, key) => {
+        players.forEach((value, key) => {
             if ((i & (1 << cnt)) > 0) {
                 if (value[0] === null) {
                     throw new Error("A player does not have a primary role");
@@ -41,6 +41,7 @@ const makeTeams = (players, setting) => {
         });
         let good = true;
         for (let j = 0; j < TEAM_SIZE; j++) {
+            // console.log(roleCnt[j] + " ");
             if (roleCnt[j] != 2) good = false; 
         }
         if (good) goodSols.push(i);
@@ -70,7 +71,7 @@ const makeTeams = (players, setting) => {
         }
         let chosenSol = goodSols[rndInd];
         let cnt = 0;
-        playerList.forEach((value, key) => {
+        players.forEach((value, key) => {
             let role = value[1];
             if ((chosenSol & (1 << cnt)) > 0) {
                 role = value[0];

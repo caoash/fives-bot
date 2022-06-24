@@ -16,7 +16,7 @@ module.exports = {
             .setColor(EMBED_COLOR)
             .setTitle('Fives Queuers')
             .setDescription(
-                'To sign up, type `/signup.` To remove yourself, type `/exit`.'
+                'To sign up, type `/signup`. To remove yourself, type `/exit`.'
             );
         let playerCount = 0;
         playerList.forEach((value, key) => {

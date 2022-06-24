@@ -24,7 +24,7 @@ const initSheet = async () => {
     logSheet = doc.sheetsByIndex[3]; // sheet logging win/lose of players
 
     // load all useful cells (+1 because it starts at 2)
-    await mainSheet.loadCells('A2:H' + (MAX_PLAYERS + 1).toString()); // player list
+    await mainSheet.loadCells('A2:I' + (MAX_PLAYERS + 1).toString()); // player list
 
     await mapSheet.loadCells('B1:C' + MAX_PLAYERS.toString()); // name : discord id
 
@@ -550,13 +550,86 @@ const clearPlayers = async () => {
     }
 }
 
+
+/*
+    adds a user to the ready list 
+    @param {Integer} id             id of user
+*/
+
+const addReadyUser = async (id) => {
+    let found = false;
+    for (let i = 2; i <= MAX_PLAYERS; ++i) {
+        let curCell = mainSheet.getCellByA1('I' + i.toString());
+        if (curCell.value === null) {
+            curCell.value = id;
+            curCell.horizontalAlignment = "CENTER";
+            found = true;
+            break;
+        }
+    }
+    if (!found) throw new Error("Could not find a cell to place the ID. Try increasing MAX_PLAYERS.");
+    await mainSheet.saveUpdatedCells();
+    return false;
+}
+
+/*
+    removes a user from the ready list
+    @param {Integer} id             id of user
+*/
+
+const removeReadyUser = async (id) => {
+    for (let i = 2; i <= MAX_PLAYERS; ++i) {
+        let curCell = mainSheet.getCellByA1('I' + i.toString());
+        if (curCell.value === id) {
+            curCell.value = null;
+            curCell.horizontalAlignment = "CENTER";
+            break;
+        }
+    }
+    await mainSheet.saveUpdatedCells();
+}
+
+/*
+    returns the number of ready players 
+    @return {Integer} players   number of readied players
+*/
+
+const getReady = () => {
+    let res = 0; // number of readied users
+    for (let i = 2; i <= MAX_PLAYERS; ++i) {
+        let curCell = mainSheet.getCellByA1('I' + i.toString());
+        if (curCell.value !== null) {
+            ++res;
+        }
+    }
+    return res;
+}
+
+/*
+    returns whether a player is ready 
+    @param  {String} id         player id
+    @return {boolean}           if the player with id is ready
+*/
+
+const isReady = (id) => {
+    for (let i = 2; i <= MAX_PLAYERS; ++i) {
+        let curCell = mainSheet.getCellByA1('I' + i.toString());
+        if (curCell.value === id) {
+            return true;
+        }
+    }
+    return false;
+}
+
 module.exports = {
-    initSheet, findAllPlayers, mapPlayerToID, mapIDToPlayer, getStatsOfPlayerById, getStatsOfPlayerByName, addNewPlayer, signupPlayer, unsignupPlayer, checkRegistration, getPlayerList, updateTeams, gameOngoing, updateWinner, clearSheet, getTeams, clearPlayers
+    initSheet, findAllPlayers, mapPlayerToID, mapIDToPlayer, getStatsOfPlayerById, getStatsOfPlayerByName, 
+    addNewPlayer, signupPlayer, unsignupPlayer, checkRegistration, getPlayerList, updateTeams, gameOngoing, 
+    updateWinner, clearSheet, getTeams, clearPlayers, addReadyUser, getReady, removeReadyUser, isReady
 };
 
 
 const debugCode = async () => {
-    await getPlayerList();
+    getPlayerList();
 }
 
 initSheet().then(debugCode);
