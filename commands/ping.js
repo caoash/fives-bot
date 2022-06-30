@@ -15,6 +15,6 @@ module.exports = {
             .setDescription(
                 'Response Time: ' + delay + 'ms'
             );
-        await interaction.reply({embeds : [ pingEmbed ]});
+        await interaction.editReply({embeds : [ pingEmbed ]});
 	},
 };

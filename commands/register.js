@@ -17,11 +17,12 @@ module.exports = {
 	async execute(interaction) {
         let existingUser = mapIDToPlayer(interaction.user.id);
         if (existingUser !== null) {
-            interaction.reply("You're already registered to: " + existingUser + ".");
+            await interaction.reply("You're already registered to: " + existingUser + ".");
         } else {
             let registerName = interaction.options.getString('name');
+            await interaction.deferReply();
             await addNewPlayer(registerName, interaction.user.id);
-            interaction.reply("Successfully registered " + interaction.user.username + " as " + registerName + '.');
+            await interaction.editReply("Successfully registered " + interaction.user.username + " as " + registerName + '.');
         }
 	},
 };

@@ -37,30 +37,31 @@ module.exports = {
                 )
         ),
 	async execute(interaction) {
+        await interaction.deferReply();
         if (gameOngoing()) {
-            interaction.reply("You cannot sign up. There is an ongoing game. If it has finished, do `/update {winningTeam}` to update the logs.");
+            interaction.editReply("You cannot sign up. There is an ongoing game. If it has finished, do `/update {winningTeam}` to update the logs.");
             return;
         }
         let firstRole = interaction.options.getString('primary_role');
         let secondRole = interaction.options.getString('secondary_role');
         let curPlayerList = getPlayerList();
         if (curPlayerList.size === TEAM_SIZE) {
-            interaction.reply("There are already " + TEAM_SIZE + " players registered. Support for Subs may be implemented at a future date.");
+            interaction.editReply("There are already " + TEAM_SIZE + " players registered. Support for Subs may be implemented at a future date.");
             return;
         }
         if (firstRole === secondRole) {
-            interaction.reply("You cannot have the same first and secondary role.");
+            interaction.editReply("You cannot have the same first and secondary role.");
         } else {
             let user = mapIDToPlayer(interaction.user.id);
             if (user === null) {
-                interaction.reply("You have not registered as a user yet. Use `/register` to do so.");
+                interaction.editReply("You have not registered as a user yet. Use `/register` to do so.");
             } else {
                 let registered = checkRegistration(user);
                 if (registered) {
-                    interaction.reply("You've already signed up for fives. If you want to change your roles, do `/exit` and then sign up again.");
+                    interaction.editReply("You've already signed up for fives. If you want to change your roles, do `/exit` and then sign up again.");
                 } else {
                     await signupPlayer(user, firstRole, secondRole);
-                    interaction.reply("Successfully signed up " + user + " for fives. Use `/exit` to remove yourself.");
+                    interaction.editReply("Successfully signed up " + user + " for fives. Use `/exit` to remove yourself.");
                 }
             }
         }

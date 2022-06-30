@@ -12,13 +12,13 @@ module.exports = {
 		.setDescription('Clear cache of players and participants.'),
 	async execute(interaction) {
         if (!APPROVED_LIST.includes(interaction.user.id)) {
-            interaction.reply("You are not approved to run this command. DM Mikey if you think this is a mistake.");
+            await interaction.reply("You are not approved to run this command. DM Mikey if you think this is a mistake.");
             return;
         }
 
+        await interaction.deferReply();
         await clearPlayers();
         await clearSheet();
-        
-        interaction.reply("Cleared cache of players and participants.");
+        await interaction.editReply("Cleared cache of players and participants.");
 	},
 };

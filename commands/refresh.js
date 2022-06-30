@@ -12,6 +12,7 @@ module.exports = {
 		.setName('refresh')
 		.setDescription('Refreshes the bot, updating profile and other information.'),
 	async execute(interaction) {
+        await interaction.deferReply();
         await initSheet();
         const delay = Math.abs(Date.now() - interaction.createdTimestamp);
         const refreshEmbed = new MessageEmbed()
@@ -20,6 +21,6 @@ module.exports = {
             .setDescription(
                 'Refreshed in: ' + delay + 'ms'
             );
-        await interaction.reply( {embeds : [ refreshEmbed ]} );
+        await interaction.editReply( {embeds : [ refreshEmbed ]} );
 	},
 };

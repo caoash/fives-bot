@@ -21,10 +21,22 @@ module.exports = {
                 .setRequired(true)
                 .addChoices(
                     { name: 'Random', value: 'RANDOM' },
+                    // { name: 'Custom', value: 'CUSTOM' },
                 )
         ),
+        // .addStringOption(option => 
+        //     option
+        //         .setName('teams')
+        //         .setDescription('A binary number in order of playerList representing teams.')
+        //         .setRequired(false)
+        // ),
 	async execute(interaction) {
         let curSetting = interaction.options.getString('setting');
+        // let teamSetting = interaction.options.getString('teams');
+        // if (teamSetting !== null && curSetting !== 'CUSTOM') {
+        //     await interaction.reply('You cannot specify teams if you didn\'t select the custom setting.');
+        // }
+
         const teamsEmbed = new MessageEmbed()
             .setColor(EMBED_COLOR)
             .setTitle('Fives Teams')
@@ -34,14 +46,26 @@ module.exports = {
             .setFooter({text: "READY: " + "(" + getReady() + "/" + (2 * TEAM_SIZE) + ")"})
 
         let curList = getPlayerList();
+
+        // console.log(teamSetting);
+
         if (curList.size < TEAM_SIZE) {
-            interaction.reply("There are not " + TEAM_SIZE + " players signed up.");
+            await interaction.reply("There are not " + TEAM_SIZE + " players signed up.");
             return;
         }
 
+        // // binary string to integer
+        // let binNumber = 0;
+        // let cur = 1;
+        // for (let i = 0; i < 2 * TEAM_SIZE; ++i) {
+        //     if (teamSetting.charAt(2 * TEAM_SIZE - i - 1) == '1') binNumber += cur; 
+        //     cur *= 2;
+        // }
+
         let curTeams = makeTeams(curList, curSetting);
+
         if (curTeams === null) {
-            interaction.reply("It's impossible to make teams. Please do `/exit` and re-signup with a more diverse roles.");
+            await interaction.reply("It's impossible to make teams. Please do `/exit` and re-signup with a more diverse roles.");
             return;
         }
 
@@ -82,13 +106,13 @@ module.exports = {
             POST DRAFT LINKS + MOVE PEOPLE INTO VC
         */
 
-        interaction.reply({ components : [ readyButton ], embeds : [ teamsEmbed ] });
+        await interaction.reply({ components : [ readyButton ], embeds : [ teamsEmbed ] });
 
-        const filter = (interaction) => {teamIds.includes(interaction.user.id)};
         const collector = interaction.channel.createMessageComponentCollector();
-        console.log(teamIds);
+        // console.log(teamIds);
         collector.on('collect', async (interaction) => {
-            console.log("COLLECTED");
+            if (!teamIds.includes(interaction.user.id)) return;
+            // console.log("COLLECTED");
             const newTeamsEmbed = new MessageEmbed()
             .setColor(EMBED_COLOR)
             .setTitle('Fives Teams')
@@ -100,7 +124,7 @@ module.exports = {
                 for (let i = 0; i < TEAM_SIZE; i++) {
                     let firstID = mapPlayerToID(curTeams[i][0]);
                     let secID = mapPlayerToID(curTeams[i][1]);
-                    console.log(isReady(firstID) + " " + isReady(secID));
+                    // console.log(isReady(firstID) + " " + isReady(secID));
                     newTeamsEmbed.addFields(
                         { name: curTeams[i][0] + " " + EMOTE_LIST[i], value: (isReady(firstID) ? "READY" : "NOT READY"), inline: true },
                         { name: curTeams[i][1] + " " + EMOTE_LIST[i], value: (isReady(secID) ? "READY" : "NOT READY"), inline: true },
@@ -113,14 +137,14 @@ module.exports = {
             };
             if (interaction.customId === 'ready') {
                 if (isReady(interaction.user.id)) {
-                    interaction.reply({ content: "You've already readied up.", ephemeral: true });
+                    await interaction.reply({ content: "You've already readied up.", ephemeral: true });
                 } else {
                     await addReadyUser(interaction.user.id);
                     await upd();
                 }
             } else if (interaction.customId === 'unready') {
                 if (!isReady(interaction.user.id)) {
-                    interaction.reply({ content: "You haven't readied up.", ephemeral: true });
+                    await interaction.reply({ content: "You haven't readied up.", ephemeral: true });
                 } else {
                     await removeReadyUser(interaction.user.id);
                     await upd();

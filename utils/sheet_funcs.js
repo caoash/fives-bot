@@ -41,6 +41,7 @@ const initSheet = async () => {
 
 const findAllPlayers = () => {
     let playerArr = [];
+    
     for (let i = 2; i <= MAX_PLAYERS; ++i) {
         let playerData = mainSheet.getCellByA1('F' + i.toString()).value;
         if (playerData !== null) {
@@ -530,8 +531,10 @@ const clearSheet = async () => {
     for (let i = 1; i < 2 + TEAM_SIZE; ++i) {
         let winCheck = mainSheet.getCell(i, 6);
         let loseCheck = mainSheet.getCell(i, 7);
+        let readyCheck = mainSheet.getCell(i, 8);
         winCheck.value = null;
         loseCheck.value = null;
+        readyCheck.value = null;
     }
 
     await mainSheet.saveUpdatedCells();

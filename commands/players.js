@@ -31,6 +31,6 @@ module.exports = {
             playersEmbed.addField(roleString, "\u200b", false);
         })
         playersEmbed.setFooter({text : '(' + playerCount + '/10)'});
-        interaction.reply({ embeds : [ playersEmbed ] });
+        await interaction.reply({ embeds : [ playersEmbed ] });
 	},
 };

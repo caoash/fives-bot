@@ -21,7 +21,7 @@ for (const file of commandFiles) {
 client.once('ready', async () => {
 	await initSheet();
 	client.user.setPresence({ activities: [{ name: 'Damos run it down', type: 3 }]});
-	console.log("Successfully logged in as " + client.user.username + ".");
+	// console.log("Successfully logged in as " + client.user.username + ".");
 });
 
 client.on('interactionCreate', async interaction => {

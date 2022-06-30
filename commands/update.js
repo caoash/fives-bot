@@ -23,24 +23,24 @@ module.exports = {
         ),
 	async execute(interaction) {
         if (!APPROVED_LIST.includes(interaction.user.id)) {
-            interaction.reply("You are not approved to run this command. DM Mikey if you think this is a mistake.");
+            await interaction.reply("You are not approved to run this command. DM Mikey if you think this is a mistake.");
             return;
         }
         if (!gameOngoing()) {
-            interaction.reply("There is no ongoing game.");
+            await interaction.reply("There is no ongoing game.");
             return;
         }
         let winner = interaction.options.getString('winner');
         
         if (winner === 'NULL') {
             await clearSheet();
-            interaction.reply("Cancelled the game.");
+            await interaction.reply("Cancelled the game.");
             return;
         }
         
         await updateWinner(winner);
         await clearSheet();
         
-        interaction.reply("Updated sheet with winner team " + (winner === 'ONE' ? 'one.' : 'two.'));
+        await interaction.reply("Updated sheet with winner team " + (winner === 'ONE' ? 'one.' : 'two.'));
 	},
 };
