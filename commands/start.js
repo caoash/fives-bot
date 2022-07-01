@@ -1,10 +1,14 @@
 const { SlashCommandBuilder } = require('@discordjs/builders');
 const { MessageActionRow, MessageButton, MessageEmbed } = require('discord.js');
-const { EMOTE_LIST, TEAM_SIZE, EMBED_COLOR } = require('../utils/config');
+const { EMOTE_LIST, TEAM_SIZE, EMBED_COLOR, VOICE_CHANNEL_ONE, VOICE_CHANNEL_TWO } = require('../utils/config');
 
 const {
-    getPlayerList, updateTeams, mapPlayerToID, addReadyUser, removeReadyUser, getReady, isReady
+    getPlayerList, updateTeams, mapPlayerToID, addReadyUser, removeReadyUser, getReady, isReady, getTeams
 } = require('../utils/sheet_funcs');
+
+const {
+    getLinks
+} = require('../utils/scrape_funcs');
 
 const {
     makeTeams, 
@@ -21,21 +25,11 @@ module.exports = {
                 .setRequired(true)
                 .addChoices(
                     { name: 'Random', value: 'RANDOM' },
-                    // { name: 'Custom', value: 'CUSTOM' },
+                    { name: 'Get Teams', value: 'GET' },
                 )
         ),
-        // .addStringOption(option => 
-        //     option
-        //         .setName('teams')
-        //         .setDescription('A binary number in order of playerList representing teams.')
-        //         .setRequired(false)
-        // ),
 	async execute(interaction) {
         let curSetting = interaction.options.getString('setting');
-        // let teamSetting = interaction.options.getString('teams');
-        // if (teamSetting !== null && curSetting !== 'CUSTOM') {
-        //     await interaction.reply('You cannot specify teams if you didn\'t select the custom setting.');
-        // }
 
         const teamsEmbed = new MessageEmbed()
             .setColor(EMBED_COLOR)
@@ -47,29 +41,25 @@ module.exports = {
 
         let curList = getPlayerList();
 
-        // console.log(teamSetting);
-
         if (curList.size < TEAM_SIZE) {
             await interaction.reply("There are not " + TEAM_SIZE + " players signed up.");
             return;
         }
 
-        // // binary string to integer
-        // let binNumber = 0;
-        // let cur = 1;
-        // for (let i = 0; i < 2 * TEAM_SIZE; ++i) {
-        //     if (teamSetting.charAt(2 * TEAM_SIZE - i - 1) == '1') binNumber += cur; 
-        //     cur *= 2;
-        // }
-
-        let curTeams = makeTeams(curList, curSetting);
+        let curTeams = null;
+        
+        if (curSetting === "GET") {
+            curTeams = getTeams();
+        } else {
+            curTeams = makeTeams(curList, curSetting);
+        }
 
         if (curTeams === null) {
             await interaction.reply("It's impossible to make teams. Please do `/exit` and re-signup with a more diverse roles.");
             return;
         }
 
-        await updateTeams(curTeams);
+        if (curTeams !== "GET") await updateTeams(curTeams);
 
         let teamIds = [];
         
@@ -102,7 +92,7 @@ module.exports = {
 			);
 
         /* 
-            TODO: TRACK HOW MANY USERS HAVE READIED UP, AND WHEN 10, START:
+            @TODO: TRACK HOW MANY USERS HAVE READIED UP, AND WHEN 10, START:
             POST DRAFT LINKS + MOVE PEOPLE INTO VC
         */
 
@@ -111,15 +101,18 @@ module.exports = {
         const collector = interaction.channel.createMessageComponentCollector();
         // console.log(teamIds);
         collector.on('collect', async (interaction) => {
-            if (!teamIds.includes(interaction.user.id)) return;
-            // console.log("COLLECTED");
+            if (!teamIds.includes(interaction.user.id)) {
+                await interaction.reply("You aren't one of the registered users.");
+                return;
+            }
             const newTeamsEmbed = new MessageEmbed()
-            .setColor(EMBED_COLOR)
-            .setTitle('Fives Teams')
-            .setDescription(
-                'Teams were made using the setting: ' + curSetting + "."
-            )
-            .setFooter({text: "READY: " + "(" + getReady() + "/" + (2 * TEAM_SIZE) + ")"})
+                .setColor(EMBED_COLOR)
+                .setTitle('Fives Teams')
+                .setDescription(
+                    'Teams were made using the setting: ' + curSetting + "."
+                )
+                .setFooter({text: "READY: " + "(" + getReady() + "/" + (2 * TEAM_SIZE) + ")"})
+
             const upd = async () => {
                 for (let i = 0; i < TEAM_SIZE; i++) {
                     let firstID = mapPlayerToID(curTeams[i][0]);
@@ -129,18 +122,46 @@ module.exports = {
                         { name: curTeams[i][0] + " " + EMOTE_LIST[i], value: (isReady(firstID) ? "READY" : "NOT READY"), inline: true },
                         { name: curTeams[i][1] + " " + EMOTE_LIST[i], value: (isReady(secID) ? "READY" : "NOT READY"), inline: true },
                     )
-    
                     if (i != TEAM_SIZE - 1) newTeamsEmbed.addField("\u200b", "\u200b", false);
                 }
                 newTeamsEmbed.setFooter({text: "READY: " + "(" + getReady() + "/" + (2 * TEAM_SIZE) + ")"});
                 await interaction.update({ components : [ readyButton ], embeds : [ newTeamsEmbed ] });
             };
+            
             if (interaction.customId === 'ready') {
                 if (isReady(interaction.user.id)) {
                     await interaction.reply({ content: "You've already readied up.", ephemeral: true });
                 } else {
                     await addReadyUser(interaction.user.id);
                     await upd();
+                    let numReady = getReady();
+                    if (numReady === 1) { // @TODO change to (2 * TEAM_SIZE)
+                        let draftLinks = await getLinks();
+
+                        const startGameEmbed = new MessageEmbed()
+                            .setColor(EMBED_COLOR)
+                            .setTitle('Game Started')
+                            .setDescription(
+                                'Moving players to correct VCs. If you want, you can manually move back.'
+                            )
+                            .addFields(
+                                { name: "1️⃣ Team 1 Draft Link", value: draftLinks['blueLink'] },
+                                { name: "2️⃣ Team 2 Draft Link", value: draftLinks['redLink'] },
+                                { name: "👀 Spectator Draft Link", value: draftLinks['specLink'] },
+                            )
+
+                        await interaction.followUp({ embeds : [ startGameEmbed ] });
+                        let curGuild = interaction.guild;
+                        for (let i = 0; i < teamIds.length; ++i) {
+                            if (!isReady(teamIds[i])) continue;
+                            let curPlayer = await curGuild.members.fetch(teamIds[i]);
+                            if (curPlayer === null) continue;
+                            let curVoice = curPlayer.voice;
+                            if (curVoice === null) continue;
+                            if (i % 2 == 0) await curVoice.setChannel(VOICE_CHANNEL_ONE);
+                            else await curVoice.setChannel(VOICE_CHANNEL_TWO);
+                        }
+                    }
                 }
             } else if (interaction.customId === 'unready') {
                 if (!isReady(interaction.user.id)) {
