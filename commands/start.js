@@ -135,7 +135,7 @@ module.exports = {
                     await addReadyUser(interaction.user.id);
                     await upd();
                     let numReady = getReady();
-                    if (numReady === 1) { // @TODO change to (2 * TEAM_SIZE)
+                    if (numReady === 2 * TEAM_SIZE) { // @TODO change to (2 * TEAM_SIZE)
                         let draftLinks = await getLinks();
 
                         const startGameEmbed = new MessageEmbed()
