@@ -1,5 +1,4 @@
 const puppeteer = require('puppeteer');
-const { URL } = require('./config.json');
 
 const getLinks = async () => {
     const browser = await puppeteer.launch({
@@ -9,10 +8,10 @@ const getLinks = async () => {
         ]
     });
     const page = await browser.newPage();
-    await page.goto(URL);
+    await page.goto("http://prodraft.leagueoflegends.com/");
 
-    await page.type('#blue_team_name', 'Team Lapoo');
-    await page.type('#red_team_name', 'Team Jericope');
+    await page.type('#blue_team_name', 'Blue Side');
+    await page.type('#red_team_name', 'Red Side');
     await page.type('#match_name', 'Fives Fridays');
 
     const button = await page.$('.confirm');

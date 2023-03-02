@@ -35,7 +35,7 @@ module.exports = {
         const statsEmbed = new MessageEmbed()
             .setColor(EMBED_COLOR)
             .setTitle('Profile for ' + chosenUser.username)
-            .setDescription("All information is taken from the fives Google Sheet.")
+            .setDescription("")
             .setThumbnail(chosenUser.avatarURL())
             .addFields(
                 { name: 'Wins', value: statsList[0].toString(), inline: true },

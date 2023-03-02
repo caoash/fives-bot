@@ -1,7 +1,7 @@
 const fs = require('node:fs');
 const path = require('node:path');
 const { Client, Collection, Intents } = require('discord.js');
-const {BOT_TOKEN } = require('./config.json');
+const {BOT_TOKEN} = require('./config.json');
 const {
     initSheet
 } = require('./utils/sheet_funcs');

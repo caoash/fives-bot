@@ -1,6 +1,6 @@
 const { SlashCommandBuilder } = require('@discordjs/builders');
 const { MessageEmbed } = require('discord.js');
-const { EMOTE_LIST, TEAM_SIZE, APPROVED_LIST } = require('../utils/config');
+const { APPROVED_LIST } = require('../utils/config');
 
 const {
     updateWinner, clearSheet, gameOngoing, clearPlayers

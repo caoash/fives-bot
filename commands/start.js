@@ -3,7 +3,7 @@ const { MessageActionRow, MessageButton, MessageEmbed } = require('discord.js');
 const { EMOTE_LIST, TEAM_SIZE, EMBED_COLOR, VOICE_CHANNEL_ONE, VOICE_CHANNEL_TWO } = require('../utils/config');
 
 const {
-    getPlayerList, updateTeams, mapPlayerToID, addReadyUser, removeReadyUser, getReady, isReady, getTeams
+    getPlayerList, updateTeams, mapPlayerToID, addReadyUser, removeReadyUser, getReady, isReady, getTeams, gameOngoing
 } = require('../utils/sheet_funcs');
 
 const {
@@ -29,20 +29,29 @@ module.exports = {
                 )
         ),
 	async execute(interaction) {
+        let ongoing = gameOngoing();
+        if (ongoing) {
+            let teamsEmbed = new MessageEmbed()
+                .setColor(EMBED_COLOR)
+                .setTitle('Fives Teams')
+                .setDescription(
+                    'There is an ongoing game. If it has finished, do `/update {winningTeam}` to update the logs.'
+                )
+                .setFooter({text: "ONGOING"})   
+            await interaction.reply({embeds:[teamsEmbed]});
+            return;
+        }
         let curSetting = interaction.options.getString('setting');
-
-        const teamsEmbed = new MessageEmbed()
+        let teamsEmbed = new MessageEmbed()
             .setColor(EMBED_COLOR)
             .setTitle('Fives Teams')
             .setDescription(
                 'Teams were made using the setting: ' + curSetting + "."
             )
-            .setFooter({text: "READY: " + "(" + getReady() + "/" + (2 * TEAM_SIZE) + ")"})
-
+            .setFooter({text: "READY: " + "(" + getReady() + "/" + (2 * TEAM_SIZE) + ")"})  
         let curList = getPlayerList();
-
         if (curList.size < TEAM_SIZE) {
-            await interaction.reply("There are not " + TEAM_SIZE + " players signed up.");
+            await interaction.reply("There are not " + (2 * TEAM_SIZE) + " players signed up.");
             return;
         }
 
@@ -96,13 +105,23 @@ module.exports = {
             POST DRAFT LINKS + MOVE PEOPLE INTO VC
         */
 
-        await interaction.reply({ components : [ readyButton ], embeds : [ teamsEmbed ] });
+        if (!ongoing) {
+            await interaction.reply({ components : [ readyButton ], embeds : [ teamsEmbed ] });
+        } else {
+            await interaction.reply({embeds : [ teamsEmbed ]});
+            return;
+        }
 
         const collector = interaction.channel.createMessageComponentCollector();
+        let started = false;
         // console.log(teamIds);
         collector.on('collect', async (interaction) => {
             if (!teamIds.includes(interaction.user.id)) {
                 await interaction.reply("You aren't one of the registered users.");
+                return;
+            }
+            if (started) {
+                await interaction.reply({content:"The game has started, you can't ready/unready anymore.",ephemeral: true});
                 return;
             }
             const newTeamsEmbed = new MessageEmbed()
@@ -136,8 +155,15 @@ module.exports = {
                     await upd();
                     let numReady = getReady();
                     if (numReady === 2 * TEAM_SIZE) { // @TODO change to (2 * TEAM_SIZE)
+                        started = true;
+                        const startAnnouncement = new MessageEmbed()
+                            .setColor(EMBED_COLOR)
+                            .setTitle('All players have readied up!')
+                            .setDescription(
+                                'Starting the game, please wait...'
+                            )
+                        await interaction.followUp({embeds: [startAnnouncement]});
                         let draftLinks = await getLinks();
-
                         const startGameEmbed = new MessageEmbed()
                             .setColor(EMBED_COLOR)
                             .setTitle('Game Started')
@@ -157,10 +183,11 @@ module.exports = {
                             let curPlayer = await curGuild.members.fetch(teamIds[i]);
                             if (curPlayer === null) continue;
                             let curVoice = curPlayer.voice;
-                            if (curVoice === null) continue;
+                            if (curVoice.channelId === null) continue;
                             if (i % 2 == 0) await curVoice.setChannel(VOICE_CHANNEL_ONE);
                             else await curVoice.setChannel(VOICE_CHANNEL_TWO);
                         }
+
                     }
                 }
             } else if (interaction.customId === 'unready') {

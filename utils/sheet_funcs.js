@@ -58,6 +58,7 @@ const findAllPlayers = () => {
 */
 
 const mapPlayerToID = (name) => {
+    mapSheet.saveUpdatedCells();
     let resID = null;
     for (let i = 2; i <= MAX_PLAYERS; ++i) {
         let playerName = mapSheet.getCellByA1('B' + i.toString()).value;
@@ -527,7 +528,6 @@ const updateWinner = async (winningTeam) => {
 */
 
 const clearSheet = async () => {
-
     for (let i = 1; i < 2 + TEAM_SIZE; ++i) {
         let winCheck = mainSheet.getCell(i, 6);
         let loseCheck = mainSheet.getCell(i, 7);
@@ -545,6 +545,7 @@ const clearSheet = async () => {
 */
 
 const clearPlayers = async () => {
+    await mainSheet.saveUpdatedCells();
     for (let i = 1; i <= MAX_PLAYERS; ++i) {
         for (let j = 0; j < 5; j++) {
             let curCell = mainSheet.getCell(i, j);
@@ -561,16 +562,19 @@ const clearPlayers = async () => {
 
 const addReadyUser = async (id) => {
     let found = false;
+    let fi = -1;
     for (let i = 2; i <= MAX_PLAYERS; ++i) {
         let curCell = mainSheet.getCellByA1('I' + i.toString());
         if (curCell.value === null) {
-            curCell.value = id;
+            fi = i;
             curCell.horizontalAlignment = "CENTER";
             found = true;
             break;
         }
     }
     if (!found) throw new Error("Could not find a cell to place the ID. Try increasing MAX_PLAYERS.");
+    let finalCell =  mainSheet.getCellByA1('I' + fi.toString());
+    finalCell.value = id;
     await mainSheet.saveUpdatedCells();
     return false;
 }
@@ -598,6 +602,7 @@ const removeReadyUser = async (id) => {
 */
 
 const getReady = () => {
+    mainSheet.saveUpdatedCells();
     let res = 0; // number of readied users
     for (let i = 2; i <= MAX_PLAYERS; ++i) {
         let curCell = mainSheet.getCellByA1('I' + i.toString());
@@ -615,6 +620,7 @@ const getReady = () => {
 */
 
 const isReady = (id) => {
+    mainSheet.saveUpdatedCells();
     for (let i = 2; i <= MAX_PLAYERS; ++i) {
         let curCell = mainSheet.getCellByA1('I' + i.toString());
         if (curCell.value === id) {
